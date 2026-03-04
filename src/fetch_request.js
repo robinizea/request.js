@@ -19,10 +19,7 @@ export class FetchRequest {
       console.error(error)
     }
 
-    const fetch = (this.responseKind === 'turbo-stream' && window.Turbo)
-      ? window.Turbo.fetch
-      : window.fetch
-
+    const fetch = window.Turbo ? window.Turbo.fetch : window.fetch
     const response = new FetchResponse(await fetch(this.url, this.fetchOptions))
 
     if (response.unauthenticated && response.authenticationURL) {
@@ -67,7 +64,8 @@ export class FetchRequest {
       body: this.formattedBody,
       signal: this.signal,
       credentials: this.credentials,
-      redirect: this.redirect
+      redirect: this.redirect,
+      keepalive: this.keepalive
     }
   }
 
@@ -159,6 +157,10 @@ export class FetchRequest {
 
   get credentials () {
     return this.options.credentials || 'same-origin'
+  }
+
+  get keepalive () {
+    return this.options.keepalive || false
   }
 
   get additionalHeaders () {

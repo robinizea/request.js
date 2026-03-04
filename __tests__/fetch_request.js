@@ -221,6 +221,15 @@ describe('header handling', () => {
     expect(request.fetchOptions.credentials).toBe('include')
   })
 
+  test('has keepalive setting which can be changed', () => {
+    let request
+    request = new FetchRequest("get", "localhost")
+    expect(request.fetchOptions.keepalive).toBe(false)
+
+    request = new FetchRequest("get", "localhost", { keepalive: true})
+    expect(request.fetchOptions.keepalive).toBe(true)
+  })
+
   describe('csrf token inclusion', () => {
     // window.location.hostname is "localhost" in the test suite
     test('csrf token is not included in headers if url hostname is not the same as window.location (http)', () => {
@@ -303,7 +312,7 @@ describe('query params are parsed', () => {
 
 
 describe('turbostream', () => {
-  test('turbo fetch is called for turbo-stream responseKind', async() => {
+  test('turbo fetch is called when available', async() => {
     const mockResponse = new Response("success!", { status: 200 })
 
     window.fetch = jest.fn().mockResolvedValue(mockResponse)
@@ -317,16 +326,15 @@ describe('turbostream', () => {
     expect(testResponse).toStrictEqual(new FetchResponse(mockResponse))
   })
 
-  test('turbo fetch is called for other responseKind', async() => {
+  test('turbo fetch is not called when not available', async() => {
     const mockResponse = new Response("success!", { status: 200 })
 
     window.fetch = jest.fn().mockResolvedValue(mockResponse)
-    window.Turbo = { fetch: jest.fn().mockResolvedValue(mockResponse) }
+    window.Turbo = undefined
 
-    const testRequest = new FetchRequest("get", "localhost")
+    const testRequest = new FetchRequest("get", "localhost", { responseKind: 'turbo-stream' })
     const testResponse = await testRequest.perform()
 
-    expect(window.Turbo.fetch).toHaveBeenCalledTimes(0)
     expect(window.fetch).toHaveBeenCalledTimes(1)
     expect(testResponse).toStrictEqual(new FetchResponse(mockResponse))
   })
